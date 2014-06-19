@@ -43,33 +43,6 @@ public class Waterfall extends javax.swing.JPanel {
     private Marker[] markers = new Marker[2];
     private TimeLine timeLine = new TimeLine();
     public static boolean usingCuda = true;
-
-    private native void generatePixels(double[] trace, int traceWidth, int[] pixels, int pixelWidth, double sigFloor, double sigDelta);
-    private native void updateWidths(double leftEdge, double rightEdge);
-    
-//    static {
-//    try {
-//            InputStream in = ClassLoader.getSystemResourceAsStream("plot/libWaterfallJNI.so");
-//            File f = File.createTempFile("libwaterfallJNI", "so");
-//            OutputStream out = new FileOutputStream(f);
-//
-//            byte[] buf = new byte[1024];
-//            int len;
-//
-//            while ((len = in.read(buf)) > 0) {
-//                out.write(buf, 0, len);
-//            }
-//            in.close();
-//            out.close();
-//
-//            System.load(f.getAbsolutePath());
-//            System.out.println("loaded library!");
-//            
-//        } catch (Exception ex) {
-//            System.err.println("system load threw exception " + ex.toString());
-//            ex.printStackTrace();
-//        }
-//    }
     
     private class TimeLine{
         private int[] pixels = new int[4096];
@@ -386,12 +359,6 @@ public class Waterfall extends javax.swing.JPanel {
     public void setWidth(double start, double end){
         leftEdge = start;
         rightEdge = end;
-        try{
-            updateWidths(leftEdge, rightEdge);
-        }
-        catch (UnsatisfiedLinkError er){
-            System.err.println("Waterfall.java, line417 " + er.toString());
-        }
     }
     
     public void setAmp(double a) {
@@ -458,15 +425,6 @@ public class Waterfall extends javax.swing.JPanel {
                 newPix = new int[width];    
             }
             
-            if(usingCuda){
-                try{
-                    generatePixels(temp, data.capacity(), newPix, width, floor, delta);
-                }
-                catch(UnsatisfiedLinkError er){
-                    System.err.println(er.toString());
-                    usingCuda = false;
-                }
-            }
             else{
                 for (int cnt = 0; cnt < width; cnt++) {
                     double xPosition =  leftScale + (cnt * ((double)(rightScale - leftScale - 1) / (double)width));

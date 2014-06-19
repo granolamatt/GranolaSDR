@@ -5,13 +5,16 @@
  */
 package granolasdr;
 
-import granolasdr.plot.Plot;
-import granolasdr.plot.Waterfall;
 import java.awt.Color;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 
 /**
  *
@@ -22,17 +25,15 @@ public class SignalPlot extends javax.swing.JFrame {
     private final DoubleBuffer backing = DoubleBuffer.allocate(TCPClient.N);
     private final DoubleBuffer plotb = DoubleBuffer.allocate(TCPClient.N);
     private TCPClient client = null;
+    private boolean show = true;
 
-    private Waterfall waterfall1;
-    private Plot plot1;
-    
     /**
      * Creates new form SignalPlot
      */
     public SignalPlot() {
         initComponents();
-        //waterfall1.setData(backing);
-       // plot1.addData(plotb, Color.red, true, true);
+        waterfall1.setData(backing);
+        plot1.addData(plotb, Color.red, true, true);
     }
 
     /**
@@ -44,13 +45,30 @@ public class SignalPlot extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jFileChooser1 = new javax.swing.JFileChooser();
+        waterfall1 = new granolasdr.plot.Waterfall();
         startButton = new javax.swing.JButton();
         freqSpinner = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
+        plot1 = new granolasdr.plot.Plot();
         jSpinner1 = new javax.swing.JSpinner();
         jLabel2 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+        jSpinner2 = new javax.swing.JSpinner();
+        jLabel3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout waterfall1Layout = new javax.swing.GroupLayout(waterfall1);
+        waterfall1.setLayout(waterfall1Layout);
+        waterfall1Layout.setHorizontalGroup(
+            waterfall1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        waterfall1Layout.setVerticalGroup(
+            waterfall1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 132, Short.MAX_VALUE)
+        );
 
         startButton.setText("Start");
         startButton.addActionListener(new java.awt.event.ActionListener() {
@@ -68,14 +86,37 @@ public class SignalPlot extends javax.swing.JFrame {
 
         jLabel1.setText("Freq (MHz)");
 
-        jSpinner1.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.1d), null, Double.valueOf(1.0d)));
+        javax.swing.GroupLayout plot1Layout = new javax.swing.GroupLayout(plot1);
+        plot1.setLayout(plot1Layout);
+        plot1Layout.setHorizontalGroup(
+            plot1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        plot1Layout.setVerticalGroup(
+            plot1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 146, Short.MAX_VALUE)
+        );
+
+        jSpinner1.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(2000000), Integer.valueOf(250000), null, Integer.valueOf(1)));
         jSpinner1.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jSpinner1StateChanged(evt);
             }
         });
 
-        jLabel2.setText("Disp Amp");
+        jLabel2.setText("Rate (sps)");
+
+        jButton1.setText("Capture");
+        jButton1.setEnabled(false);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jSpinner2.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1500000), null, null, Integer.valueOf(1)));
+
+        jLabel3.setText("Capture Size");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -83,27 +124,44 @@ public class SignalPlot extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(startButton)
-                .addGap(18, 18, 18)
-                .addComponent(freqSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel2)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(waterfall1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(plot1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(startButton)
+                        .addGap(18, 18, 18)
+                        .addComponent(freqSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel1)
+                        .addGap(18, 18, 18)
+                        .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jSpinner2, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel3)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap(267, Short.MAX_VALUE)
+                .addContainerGap()
+                .addComponent(waterfall1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(plot1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(startButton)
                     .addComponent(freqSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
                     .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                    .addComponent(jLabel2)
+                    .addComponent(jButton1)
+                    .addComponent(jSpinner2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3))
                 .addContainerGap())
         );
 
@@ -111,7 +169,9 @@ public class SignalPlot extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        show = true;
         try {
+            jButton1.setEnabled(true);
             client = new TCPClient();
             Thread cthread = new Thread(client);
             cthread.setDaemon(true);
@@ -119,7 +179,18 @@ public class SignalPlot extends javax.swing.JFrame {
             Thread plot = new Thread() {
                 @Override
                 public void run() {
-                    while (!Thread.interrupted()) {
+                    try {
+                        double[] data = client.getSamplesMag();
+                        backing.rewind();
+                        plotb.rewind();
+                        backing.put(data);
+                        plotb.put(data);
+                        waterfall1.updateData();
+                        plot1.updateWithRescale();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(SignalPlot.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    while (show && !Thread.interrupted()) {
                         try {
                             double[] data = client.getSamplesMag();
                             backing.rewind();
@@ -144,19 +215,78 @@ public class SignalPlot extends javax.swing.JFrame {
     private void freqSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_freqSpinnerStateChanged
         if (client != null) {
             double fmhz = (Double) freqSpinner.getValue();
-            int freq = (int)(fmhz * 1000000.0);
+            int freq = (int) (fmhz * 1000000.0);
             try {
                 client.sendCommand(TCPClient.RxCommand.CenterFreq, freq);
             } catch (IOException ex) {
                 Logger.getLogger(SignalPlot.class.getName()).log(Level.SEVERE, null, ex);
             }
+            Thread cthread = new Thread() {
+                @Override
+                public void run() {
+                    client.getNumDropped();
+                }
+            };
+            cthread.start();
         }
     }//GEN-LAST:event_freqSpinnerStateChanged
 
     private void jSpinner1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinner1StateChanged
-        double amp = (Double)jSpinner1.getValue();
-        waterfall1.setAmp(amp);
+        int rate = (Integer) jSpinner1.getValue();
+        try {
+            client.sendCommand(TCPClient.RxCommand.SampleRate, rate);
+        } catch (IOException ex) {
+        }
+        Thread cthread = new Thread() {
+            @Override
+            public void run() {
+                client.getNumDropped();
+            }
+        };
+        cthread.start();
+
     }//GEN-LAST:event_jSpinner1StateChanged
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        OpenActionPerformed();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void OpenActionPerformed() {
+        show = false;
+        File file = null;
+        int returnVal = jFileChooser1.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            file = jFileChooser1.getSelectedFile();
+            System.out.println("File is " + file);
+        } else {
+            file = null;
+            System.out.println("File access cancelled by user.");
+        }
+        // Do capture now!!
+        int numBytes = (Integer) jSpinner2.getValue();
+        int cap = numBytes / TCPClient.N;
+        if (file != null) {
+            try {
+                FileOutputStream fout = new FileOutputStream(file);
+                BufferedOutputStream bout = new BufferedOutputStream(fout);
+                client.getNumDropped();
+
+                for (int cnt = 0; cnt < cap; cnt++) {
+                    byte[] samples = client.getNextSamples();
+                    bout.write(samples);
+                }
+                int drop = client.getNumDropped();
+                bout.flush();
+                bout.close();
+                System.out.println("Dropped " + drop + " Packets");
+            } catch (InterruptedException ex) {
+                Logger.getLogger(SignalPlot.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(SignalPlot.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -195,9 +325,15 @@ public class SignalPlot extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JSpinner freqSpinner;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JFileChooser jFileChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JSpinner jSpinner1;
+    private javax.swing.JSpinner jSpinner2;
+    private granolasdr.plot.Plot plot1;
     private javax.swing.JButton startButton;
+    private granolasdr.plot.Waterfall waterfall1;
     // End of variables declaration//GEN-END:variables
 }

@@ -530,7 +530,7 @@ public class Plot extends javax.swing.JPanel {
     }
 
     @Override
-    public void doLayout() {
+    public synchronized void doLayout() {
         super.doLayout();
         height = getHeight();
         width = getWidth();
