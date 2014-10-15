@@ -36,6 +36,7 @@ public class Plot extends javax.swing.JPanel {
     private int numVGrids = 4;
     private int numHGrids = 4;
     private Image offscreen = null;
+    private Image onscreen = null;
     private Graphics2D bufferGraphics;
     private boolean drawVGridB = true;
     private boolean drawHGridB = true;
@@ -50,17 +51,19 @@ public class Plot extends javax.swing.JPanel {
     private Point selectionStart = null;
     private Point selectionEnd = null;
     private boolean highLight = true;
+    private final Object lock = new Object();
 
-    /** Creates new form Plot */
+    /**
+     * Creates new form Plot
+     */
     public Plot() {
         initComponents();
     }
 
-    
-    public void disableHighlight(){
+    public void disableHighlight() {
         highLight = false;
     }
-    
+
     /**
      * Returns the color of the background
      *
@@ -72,7 +75,7 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the background color.  This method invokes the changes in the awt
+     * Sets the background color. This method invokes the changes in the awt
      * thread and is thread safe.
      *
      * @param color Color to draw on the background
@@ -93,7 +96,7 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the selection color.  This method invokes the changes in the awt
+     * Sets the selection color. This method invokes the changes in the awt
      * thread and is thread safe.
      *
      * @param color Color to draw on the background
@@ -103,20 +106,20 @@ public class Plot extends javax.swing.JPanel {
         update();
     }
 
-    public double[] getYAxis(){
+    public double[] getYAxis() {
         double[] returnValue = {0.0, 0.0};
         returnValue[0] = yAxisMin;
         returnValue[1] = yAxisMax;
-        return(returnValue);
+        return (returnValue);
     }
-    
-    public double[] getXAxis(){
+
+    public double[] getXAxis() {
         double[] returnValue = new double[2];
         returnValue[0] = xAxisMin;
         returnValue[1] = xAxisMax;
-        return(returnValue);
+        return (returnValue);
     }
-    
+
     public void setYAxis(double max, double min) {
         yAxisMin = min;
         yAxisMax = max;
@@ -150,8 +153,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the axis color.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Sets the axis color. This method invokes the changes in the awt thread
+     * and is thread safe.
      *
      * @param color Color to draw on the axis
      */
@@ -171,8 +174,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the grid color.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Sets the grid color. This method invokes the changes in the awt thread
+     * and is thread safe.
      *
      * @param color Color to draw on the grid
      */
@@ -200,8 +203,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Boolean to draw horizontal grid or not.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Boolean to draw horizontal grid or not. This method invokes the changes
+     * in the awt thread and is thread safe.
      *
      * @param b Whether or not to draw horizontal grid.
      */
@@ -219,8 +222,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Set whether or not to draw horizontal axis.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Set whether or not to draw horizontal axis. This method invokes the
+     * changes in the awt thread and is thread safe.
      *
      * @param b Boolean setting to draw horizontal axis or not
      */
@@ -238,8 +241,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Set whether or not to draw vertical axis.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Set whether or not to draw vertical axis. This method invokes the changes
+     * in the awt thread and is thread safe.
      *
      * @param b Boolean setting to draw vertical axis or not
      */
@@ -258,8 +261,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Boolean to draw vertical grid or not.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Boolean to draw vertical grid or not. This method invokes the changes in
+     * the awt thread and is thread safe.
      *
      * @param b Whether or not to draw vertical grid.
      */
@@ -269,8 +272,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the number of horizontal grids to draw.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Sets the number of horizontal grids to draw. This method invokes the
+     * changes in the awt thread and is thread safe.
      *
      * @param num Number of grids to draw
      */
@@ -289,8 +292,8 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Sets the number of vertical grids to draw.  This method invokes the changes in the awt
-     * thread and is thread safe.
+     * Sets the number of vertical grids to draw. This method invokes the
+     * changes in the awt thread and is thread safe.
      *
      * @param num Number of grids to draw
      */
@@ -301,7 +304,11 @@ public class Plot extends javax.swing.JPanel {
 
     @Override
     public void paint(Graphics g) {
-        g.drawImage(offscreen, 0, 0, this);
+        synchronized (lock) {
+            if (onscreen != null) {
+                g.drawImage(onscreen, 0, 0, this);
+            }
+        }
         //    super.paint(g);
     }
 
@@ -363,7 +370,7 @@ public class Plot extends javax.swing.JPanel {
         bufferGraphics.drawLine(w, 0, w, height);
     }
 
-     private void drawSelection() {
+    private void drawSelection() {
         if (selectionStart != null && selectionEnd != null) {
             Color currpaint = bufferGraphics.getColor();
             bufferGraphics.setColor(new Color(selectionColor.getRed(),
@@ -388,20 +395,21 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Add a data series to the plot.  This is for standard series data and will
+     * Add a data series to the plot. This is for standard series data and will
      * draw the X axis with series value not actual time value. In other words,
      * this function adds data with not x values for the x axis.
      *
-     * @param ydata - DoubleBuffer with the y axis data as the values.  The y
+     * @param ydata - DoubleBuffer with the y axis data as the values. The y
      * data can change, just call an update();
      * @param color - Color thay you want the axis to be.
      * @param autoscale - Autoscale the graph or go with current max and min.
-     * @param connectLines - Connect the lines for each point or just draw points.
+     * @param connectLines - Connect the lines for each point or just draw
+     * points.
      */
     public void addData(DoubleBuffer ydata, int color, boolean autoscale, boolean connectLines) {
         addData(ydata, Color.getColor("", color), autoscale, connectLines);
     }
-    
+
     public void addData(DoubleBuffer ydata, Color color, boolean autoscale, boolean connectLines) {
         Series s = new Series(ydata);
         if (autoscale) {
@@ -420,23 +428,24 @@ public class Plot extends javax.swing.JPanel {
     }
 
     /**
-     * Add data series to the graph.  The data seris are stored in double buffers.
-     * The data in the double buffers can change, just call update() when you
-     * change the data to cause the series to recalculate and the graph to update.
-     * 
-     * @param xdata - DoubleBuffer with the x axis data as the values.  The x
+     * Add data series to the graph. The data seris are stored in double
+     * buffers. The data in the double buffers can change, just call update()
+     * when you change the data to cause the series to recalculate and the graph
+     * to update.
+     *
+     * @param xdata - DoubleBuffer with the x axis data as the values. The x
      * data can change, just call an update();
-     * @param ydata - DoubleBuffer with the y axis data as the values.  The y
+     * @param ydata - DoubleBuffer with the y axis data as the values. The y
      * data can change, just call an update();
      * @param color - Color thay you want the axis to be.
      * @param autoscale - Autoscale the graph or go with current max and min.
-     * @param connectLines - Connect the lines for each point or just draw points.
+     * @param connectLines - Connect the lines for each point or just draw
+     * points.
      */
-    
     public void addData(DoubleBuffer xdata, DoubleBuffer ydata, int color, boolean autoscale, boolean connectLines) {
-         addData(xdata, ydata, Color.getColor("", color), autoscale, connectLines);
+        addData(xdata, ydata, Color.getColor("", color), autoscale, connectLines);
     }
-    
+
     public void addData(DoubleBuffer xdata, DoubleBuffer ydata, Color color, boolean autoscale, boolean connectLines) {
         Series s = new Series(xdata, ydata);
         if (autoscale) {
@@ -450,9 +459,9 @@ public class Plot extends javax.swing.JPanel {
     }
 
     private void drawBackground() {
-        
+
 //        if(offscreen == null){
-            offscreen = createImage(width, height);
+        offscreen = createImage(width, height);
 //        }
         if (offscreen != null) {
             bufferGraphics = (Graphics2D) offscreen.getGraphics();
@@ -481,16 +490,20 @@ public class Plot extends javax.swing.JPanel {
                 s.drawPoints();
             }
             drawSelection();
+
+            synchronized (lock) {
+                onscreen = offscreen;
+            }
         }
-        
+
     }
 
     /**
-     * Causes all autoscales to be recalculated and then forces an update on
-     * the plot.  This function is automatically called by most functions such
-     * as setDrawHGrid(), but has to be called if the underlying data to a
-     * double buffer changes.
-     * 
+     * Causes all autoscales to be recalculated and then forces an update on the
+     * plot. This function is automatically called by most functions such as
+     * setDrawHGrid(), but has to be called if the underlying data to a double
+     * buffer changes.
+     *
      */
     public synchronized void update() {
         // updateLock = true;
@@ -501,7 +514,7 @@ public class Plot extends javax.swing.JPanel {
 
     /**
      * Causes all autoscales to be recalculated and min/max to be found and then
-     * forces an update on the plot.  Same as update except finds new scales
+     * forces an update on the plot. Same as update except finds new scales
      *
      */
     public void updateWithRescale() {
@@ -538,10 +551,10 @@ public class Plot extends javax.swing.JPanel {
         drawBackground();
     }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -578,9 +591,9 @@ public class Plot extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-   // JPL: methods disabled for the MMP_pistl, feel free to uncoment for other usage
+    // JPL: methods disabled for the MMP_pistl, feel free to uncoment for other usage
     private void formMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseMoved
-        if(highLight){
+        if (highLight) {
             double[] pval = getPValue(evt.getX(), evt.getY());
             String x = String.format("%.4f", pval[0]);
             String y = String.format("%.4f", pval[1]);
@@ -592,7 +605,7 @@ public class Plot extends javax.swing.JPanel {
 
     private void formMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseDragged
 //
-        if(highLight){
+        if (highLight) {
 //        double[] pval = getPValue(evt.getX(), evt.getY());
 //        String x = String.format("%.4f", pval[0]);
 //        String y = String.format("%.4f", pval[1]);
@@ -603,7 +616,7 @@ public class Plot extends javax.swing.JPanel {
     }//GEN-LAST:event_formMouseDragged
 
     private void formMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMousePressed
-        if(highLight){
+        if (highLight) {
 //        double[] pval = getPValue(evt.getX(), evt.getY());
 //        String x = String.format("%.4f", pval[0]);
 //        String y = String.format("%.4f", pval[1]);
@@ -613,7 +626,7 @@ public class Plot extends javax.swing.JPanel {
     }//GEN-LAST:event_formMousePressed
 
     private void formMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseReleased
-        if(highLight){
+        if (highLight) {
             ZoomCoordinates oldZoom = new ZoomCoordinates(xAxisMin, xAxisMax, yAxisMin, yAxisMax);
             if (evt.getButton() == 1) {
                 if (selectionStart != null && selectionEnd != null) {
@@ -648,13 +661,13 @@ public class Plot extends javax.swing.JPanel {
             }
             ZoomCoordinates newZoom = new ZoomCoordinates(xAxisMin, xAxisMax, yAxisMin, yAxisMax);
             firePropertyChange("Zoom Event", oldZoom, newZoom);
-            
+
         }
     }//GEN-LAST:event_formMouseReleased
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-    private class Series{
+    private class Series {
 
         private DoubleBuffer xData;
         private DoubleBuffer yData;
@@ -742,7 +755,7 @@ public class Plot extends javax.swing.JPanel {
             // JPL: no point in computing values we aren't going to display 
             int startx = 0;
             int endx = yPoints.length;
-            
+
 //            if(xData != null && (xAxisMin < (Double.MAX_VALUE / 2.0)) && (xAxisMax > (-Double.MAX_VALUE / 2.0))){
 //                double start = xData.get(0);
 //                double stop = xData.get(yPoints.length - 1);
@@ -751,9 +764,6 @@ public class Plot extends javax.swing.JPanel {
 //                    endx = (int)(yPoints.length * ((xAxisMax - start) / (stop - start)));
 //                }
 //            }
-            
-            
-            
             for (int cnt = startx; cnt < endx; cnt++) {
                 if (xData != null) {
                     Point p = getPoint(xData.get(cnt), yData.get(cnt));
