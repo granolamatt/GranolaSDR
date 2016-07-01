@@ -34,6 +34,11 @@ class TCPClient implements Runnable {
         private RxCommand(int cmd) {
             command = (byte) cmd;
         }
+        
+        public byte getCommand() {
+            return command;
+        }
+        
     }
 
     public TCPClient() throws IOException {
@@ -82,6 +87,7 @@ class TCPClient implements Runnable {
             while (!Thread.interrupted()) {
                 num = sampleServer.read(samples) >> 1;
                 for (int cnt = 0; cnt < num; cnt++) {
+                    // Note that I invert every other sample to put dc in center
                     buffer[last++] = (byte) (((samples[2 * cnt] & 0xff) - 127.0f) * inv);
                     buffer[last++] = (byte) (((samples[2 * cnt + 1] & 0xff) - 127.0f) * inv);
                     inv = -inv;
